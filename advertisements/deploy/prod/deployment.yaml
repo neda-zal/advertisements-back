@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: advertisements-back
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: advertisements-back
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 33%
+  template:
+    metadata:
+      labels:
+        app: advertisements-back
+    spec:
+      containers:
+        - image: "advertisements-back:1.0.0.RELEASE"
+          imagePullPolicy: Always
+          name: advertisements-back
+          resources:
+            requests:
+              cpu: "0.5"
+              memory: "2048Mi"
+            limits:
+              cpu: "2"
+              memory: "2048Mi"
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              port: 8080
+              path: /advertisements-back/actuator/health
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              port: 8080
+              path: /advertisements-back/actuator/info
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          env:
+            - name: JAVA_OPTS
+              value: "-Xms2048m -Xmx2048m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsUser: 10001
+            runAsGroup: 10001
